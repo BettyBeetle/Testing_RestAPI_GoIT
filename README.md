@@ -19,6 +19,7 @@
 >
 > 
 > SECRET_KEY=<secret_key>
+>
 > ALGORITHM=<algorithm>
 >
 > MAIL_USERNAME=<mail_username>
