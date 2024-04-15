@@ -16,15 +16,27 @@ conf = ConnectionConfig(
     MAIL_PORT=settings.mail_port,
     MAIL_SERVER=settings.mail_server,
     MAIL_FROM_NAME="Example email",
-    MAIL_STARTTLS=False,#True
-    MAIL_SSL_TLS=True,#False
+    MAIL_STARTTLS=False,
+    MAIL_SSL_TLS=True,
     USE_CREDENTIALS=True,
-    VALIDATE_CERTS=False,#True
+    VALIDATE_CERTS=False,
     TEMPLATE_FOLDER=Path(__file__).parent / 'templates',
 )
 
 
 async def send_email(email: EmailStr, username: str, host: str):
+    '''
+    Send an email for email confirmation.
+
+    Args:
+        email (EmailStr): The email address to send the confirmation email to.
+        username (str): The username associated with the email.
+        host (str): The host URL where the confirmation link should point to.
+
+    Raises:
+        ConnectionErrors: If there is an error connecting to the email server.
+    '''
+    
     try:
         token_verification = auth_service.create_email_token({"sub": email})
         message = MessageSchema(

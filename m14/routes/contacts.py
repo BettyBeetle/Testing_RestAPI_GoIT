@@ -18,17 +18,43 @@ router = APIRouter(prefix='/contacts')
 
 @router.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
+    '''
+     Custom endpoint for serving Swagger UI HTML.
+
+    Returns:
+        str: The Swagger UI HTML page.
+    '''
+    
     return get_swagger_ui_html(
         openapi_url="/api/openapi.json",
         title="RestApi Docs"
     )
+
+
 @router.get("/openapi.json", include_in_schema=False)
 async def get_open_api_endpoint():
+    '''
+    Custom endpoint for serving OpenAPI JSON.
+
+    Returns:
+        JSONResponse: The OpenAPI JSON document.
+    '''
+    
     return JSONResponse(get_openapi(title="RestApi", version="1.0.0", routes=router.routes))
 
 
 @router.get("/upcoming_birthdays", response_model=List[ContactsOut])
 async def get_upcoming_birthdays(current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    '''
+     Retrieve a list of upcoming birthdays for all contacts.
+
+    Args:
+        db (Session, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        List[ContactsOut]: A list of upcoming birthdays.
+    '''
+    
     upcoming_birthdays_list = await upcoming_birthdays(current_user, db)
     upcoming_birthdays_out_list = [ContactsOut(
                                         id=contact.id,
@@ -48,6 +74,21 @@ async def create_contact(
         current_user: User = Depends(auth_service.get_current_user),
         db: Session = Depends(get_db)
 ):
+    '''
+    Create a new contact for the current authenticated user.
+
+    Args:
+        body (ContactsIn): The data for creating the contact.
+        current_user (User): The current authenticated user. 
+        db (Session, optional): The database session.
+
+    Returns:
+        ContactsOut: The newly created contact.
+
+    Raises:
+        HTTPException: If the contact creation fails.
+    '''
+    
     contact = await repository_contacts.create_contact(body, current_user, db)
     if not contact:
         raise HTTPException(status_code=400, detail="Failed to create contact")
@@ -59,6 +100,7 @@ async def create_contact(
 
     return contact
 
+
 @router.get("/", response_model=List[ContactsOut])
 async def read_contacts(
         search: str = Query(None, description="Search contacts by first name, last name, or email"),
@@ -67,6 +109,20 @@ async def read_contacts(
         current_user: User= Depends(auth_service.get_current_user),
         db: Session = Depends(get_db)
 ):
+    '''
+    Retrieve a list of contacts.
+
+    Args:
+        search (str, optional): Search contacts by first name, last name, or email.
+        skip (int, optional): Number of contacts to skip. Defaults to 0.
+        limit (int, optional): Maximum number of contacts to retrieve. Defaults to 100.
+        current_user (User, optional): The current user.
+        db (Session, optional): The database session.
+
+    Returns:
+        List[ContactsOut]: A list of contacts
+    '''
+    
     if search:
         contacts = await repository_contacts.search_contacts(search, skip, limit, current_user, db)
     else:
@@ -78,6 +134,22 @@ async def read_contacts(
 
 @router.get("/{contact_id}", response_model=ContactsOut)
 async def read_contact(contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    '''
+    Retrieve a contact by ID.
+
+    Args:
+        contact_id (int): The ID of the contact to retrieve.
+        current_user (User, optional): The current user. 
+        db (Session, optional): The database session. 
+
+    Returns:
+        ContactsOut: The contact information.
+
+    Raises:
+        HTTPException: If the contact with the specified ID is not found.
+   
+    '''
+
     contact = await repository_contacts.get_contact(contact_id, current_user, db)
     if contact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
@@ -86,6 +158,23 @@ async def read_contact(contact_id: int, current_user: User = Depends(auth_servic
 
 @router.put("/{contact_id}", response_model=ContactsOut)
 async def update_contact(body: ContactsIn, contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    '''
+    Update a contact by ID.
+
+    Args:
+        body (ContactsIn): The updated contact information.
+        contact_id (int): The ID of the contact to update.
+        current_user (User, optional): The current user. 
+        db (Session, optional): The database session. 
+
+    Returns:
+        ContactsOut: The updated contact information.
+
+    Raises:
+        HTTPException: If the contact with the specified ID is not found.
+    
+    '''
+    
     contact = await repository_contacts.update_contact(contact_id, body,  current_user, db)
     if contact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
@@ -94,6 +183,22 @@ async def update_contact(body: ContactsIn, contact_id: int, current_user: User =
 
 @router.delete("/{contact_id}", response_model=ContactsOut)
 async def remove_contact(contact_id: int, current_user: User = Depends(auth_service.get_current_user), db: Session = Depends(get_db)):
+    '''
+    Delete a contact by ID.
+
+    Args:
+        contact_id (int): The ID of the contact to delete.
+        current_user (User, optional): The current user. Defaults to Depends(auth_service.get_current_user).
+        db (Session, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        ContactsOut: The deleted contact information.
+
+    Raises:
+        HTTPException: If the contact with the specified ID is not found.
+   
+    '''
+    
     contact = await repository_contacts.remove_contact(contact_id, current_user, db)
     if contact is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")

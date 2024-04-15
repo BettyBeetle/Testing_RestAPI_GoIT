@@ -4,6 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+sphinx = "*"
+pytest = "*"
+httpx = "*"
+pytest-asyncio = "*"
+anyio = "*"
+pytest-trio = "*"
 
 [dev-packages]
 
